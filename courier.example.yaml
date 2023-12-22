@@ -1,0 +1,48 @@
+env:
+  url: http://localhost:8080/api/v1
+  vars:
+    token: test
+    id: 123213
+
+requests:
+  - name: "new token"
+    method: "POST"
+    endpoint: "/login"
+    headers:
+      "Content-type": "application/json"
+    body: >
+      {
+        "username": "test",
+        "password": "secret"
+      }
+    wantStatus: 200
+    wantResponse: "{access_token}"
+    vars:
+      token: "access_token"
+  - name: "get users"
+    method: "GET"
+    endpoint: "/users"
+    headers:
+      "Content-type": "application/json"
+      "Authorization": "Bearer {{ .token }}"
+    wantStatus: 200
+    wantResponse: "{success}"
+    vars:
+      id: "data[1],id"
+  - name: "get user"
+    method: "GET"
+    endpoint: "/users/{{ .id }}"
+    headers:
+      "Authorization": "Bearer {{ .token }}"
+      "Content-type": "application/json"
+    wantStatus: 200
+    wantResponse: "{success}"
+  - name: "insert user"
+    method: "POST"
+    endpoint: "/users"
+    headers:
+      "Authorization": "Bearer {{ .token }}"
+      "Content-type": "application/x-www-form-urlencoded"
+    body: username=test&password=secret&name=namesurname
+    wantStatus: 201
+    wantResponse: "{updated}"

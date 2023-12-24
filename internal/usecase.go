@@ -196,6 +196,8 @@ func (c *APIUseCase) seekAndSetEnv(output, env interface{}) error {
 				if err != nil {
 					return fmt.Errorf("response does not contain %s", node)
 				}
+
+				outputDepth = keyValue
 				newEnvValue = keyValue
 			}
 		}

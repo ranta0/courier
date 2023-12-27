@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type UseCase struct {
@@ -23,6 +24,7 @@ type UseCase struct {
 	WantStatus   int               `yaml:"wantStatus"`
 	WantResponse string            `yaml:"wantResponse"`
 	Vars         map[string]string `yaml:"vars"`
+	Delay        int               `yaml:"delay"`
 }
 
 type APIUseCase struct {
@@ -37,6 +39,7 @@ type APIUseCase struct {
 
 	WantStatus   int
 	WantResponse string
+	Delay        int
 }
 
 func NewAPIUseCase(baseUrl string, env interface{}, usecase *UseCase) (*APIUseCase, error) {
@@ -45,11 +48,15 @@ func NewAPIUseCase(baseUrl string, env interface{}, usecase *UseCase) (*APIUseCa
 		headers[key] = templateValueReplace(header, env)
 	}
 
+	name := templateValueReplace(usecase.Name, env)
+
 	endpoint := templateValueReplace(usecase.Endpoint, env)
-	body := strings.NewReader(usecase.Body)
+
+	bodyValued := templateValueReplace(usecase.Body, env)
+	body := strings.NewReader(bodyValued)
 
 	return &APIUseCase{
-		Name: usecase.Name,
+		Name: name,
 		Method: usecase.Method,
 		BaseURL: baseUrl,
 		Endpoint: endpoint,
@@ -58,6 +65,7 @@ func NewAPIUseCase(baseUrl string, env interface{}, usecase *UseCase) (*APIUseCa
 		Vars: usecase.Vars,
 		WantStatus: usecase.WantStatus,
 		WantResponse: usecase.WantResponse,
+		Delay: usecase.Delay,
 	}, nil
 }
 
@@ -112,6 +120,10 @@ func (c *APIUseCase) Prefix() string {
 }
 
 func (c *APIUseCase) request() (error) {
+	if c.Delay > 0 {
+		time.Sleep(time.Duration(c.Delay) * time.Second)
+	}
+
 	request, err := http.NewRequest(c.Method, c.BaseURL + c.Endpoint, c.Body)
 	if err != nil {
 		return err

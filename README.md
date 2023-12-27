@@ -1,7 +1,7 @@
 # courier
 Http client to make testing apis, or just making normal curl requests a bit easier for me
 
-## Sample Config
+## Config
 ```yaml
 env:
   url: http://localhost:8080/api/v1
@@ -22,6 +22,7 @@ requests:
       }
     wantStatus: 200
     wantResponse: "{access_token}"
+    delay: 1
     vars:
       token: "access_token"
   - name: "get users"
@@ -35,9 +36,10 @@ requests:
     vars:
       id: "data[0],id"
 ```
+The key ```delay``` delays the current request by X seconds, X must be an integer.
 
 Vars can be used as contasts defined at the head of the config or assigned at run time with the data of the requests.
-These vars can be used in the endpoint and headers with the ```{{ .variable }}``` notation.
+These vars can be used in the ```endpoint```, ```headers```, ```body``` and ```name``` with the ```{{ .variable }}``` notation.
 
 The key ```vars``` inside the definition of the request will search for that key inside the response and assign it to the variable.
 ```yaml

@@ -6,27 +6,22 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 
-	"github.com/ranta0/courier/internal"
+	"github.com/ranta0/courier"
 	"gopkg.in/yaml.v3"
-	"github.com/fatih/color"
 )
 
-type Env struct {
-	BaseURL  string `yaml:"url"`
-	Vars     interface{} `yaml:"vars"`
-}
-
 type Config struct {
-	Env      Env                `yaml:"env"`
-	Auth     internal.UseCase   `yaml:"auth"`
-	Requests []internal.UseCase `yaml:"requests"`
+	Vars     interface{}       `yaml:"vars"`
+	Auth     courier.UseCase   `yaml:"auth"`
+	Requests []courier.UseCase `yaml:"requests"`
 }
 
 var (
-	defaultConfigFileName = "courier"
+	defaultConfigFileName       = "courier"
 	defaultConfigFileNameFolder = "config"
-	defaultConfigFolderName = ".courier/"
+	defaultConfigFolderName     = ".courier/"
 )
 
 func getConfigFile(configFileName string) (string, error) {
@@ -72,7 +67,12 @@ func editConfigFile(editor, configFile string) error {
 		return fmt.Errorf("EDITOR enviroment variable is empty or no single editor has been chosen")
 	}
 
-	cmd := exec.Command("sh", "-c", editor+" "+configFile)
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd.exe", "/C", editor+" "+configFile)
+	} else {
+		cmd = exec.Command("sh", "-c", editor+" "+configFile)
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -97,7 +97,12 @@ func editorReader(editor, content, extension string) error {
 	fmt.Printf("%s", temp.Name())
 	temp.Write([]byte(content))
 
-	cmd := exec.Command("sh", "-c", editor+" "+temp.Name())
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd.exe", "/C", editor+" "+temp.Name())
+	} else {
+		cmd = exec.Command("sh", "-c", editor+" "+temp.Name())
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -140,53 +145,49 @@ func main() {
 	flag.BoolVar(&test, "t", false, "show testing response")
 	flag.Parse()
 
-	red := color.New(color.FgRed).SprintFunc()
-	green := color.New(color.FgGreen).SprintFunc()
-	blue := color.New(color.FgBlue).SprintFunc()
-
 	configFileClean, err := getConfigFile(configFile)
 	if err != nil {
-		fmt.Printf("%s: %s\n", red("Error"), err)
+		fmt.Printf("%s: %s\n", courier.Red("Error"), err)
 		os.Exit(1)
 	}
 
 	if editFile {
 		err = editConfigFile(editor, configFileClean)
 		if err != nil {
-			fmt.Printf("%s: %s\n", red("Error"), err)
+			fmt.Printf("%s: %s\n", courier.Red("Error"), err)
 			os.Exit(1)
 		}
 	}
 
 	config, err := newConfig(configFileClean)
 	if err != nil {
-		fmt.Printf("%s: %s\n", red("Error"), err)
+		fmt.Printf("%s: %s\n", courier.Red("Error"), err)
 		os.Exit(1)
 	}
 
 	for _, value := range config.Requests {
-		usecase, err := internal.NewAPIUseCase(config.Env.BaseURL, config.Env.Vars, &value)
+		usecase, err := courier.NewAPIUseCase(config.Vars, &value)
 		if err != nil {
-			fmt.Printf("%s: %s %s\n", red("Error"), blue(usecase.Prefix()), err)
+			fmt.Printf("%s: %s %s\n", courier.Red("Error"), courier.Blue(usecase.Prefix()), err)
 			os.Exit(1)
 		}
 
 		var responseOutput string
 		if test {
-			err = usecase.Test(config.Env.Vars)
+			err = usecase.Test(config.Vars)
 			if err != nil {
-				fmt.Printf("%s: %s %s\n", red("Error"), blue(usecase.Prefix()), err)
+				fmt.Printf("%s: %s %s\n", courier.Red("Error"), courier.Blue(usecase.Prefix()), err)
 			} else {
-				fmt.Printf("%s: %s\n", green("Success"), blue(usecase.Prefix()))
+				fmt.Printf("%s: %s\n", courier.Green("Success"), courier.Blue(usecase.Prefix()))
 			}
 
 			continue
 		}
 
-		responseOutput, err = usecase.Curl(config.Env.Vars)
+		responseOutput, err = usecase.Curl(config.Vars)
 		if err != nil {
 			fmt.Printf("%s", responseOutput)
-			fmt.Printf("%s: %s %s\n", red("Error"), blue(usecase.Prefix()), err)
+			fmt.Printf("%s: %s %s\n", courier.Red("Error"), courier.Blue(usecase.Prefix()), err)
 			os.Exit(1)
 		}
 
@@ -194,7 +195,7 @@ func main() {
 		if prettierJson {
 			responseOutput, err = prettyJSON(responseOutput)
 			if err != nil {
-				fmt.Printf("%s: %s %s\n", red("Error"), blue(usecase.Prefix()), err)
+				fmt.Printf("%s: %s %s\n", courier.Red("Error"), courier.Blue(usecase.Prefix()), err)
 				os.Exit(1)
 			}
 

@@ -1,4 +1,4 @@
-package internal
+package courier
 
 import (
 	"bytes"
@@ -20,7 +20,6 @@ type UseCase struct {
 	Endpoint     string            `yaml:"endpoint"`
 	Body         string            `yaml:"body"`
 	Headers      map[string]string `yaml:"headers"`
-
 	WantStatus   int               `yaml:"wantStatus"`
 	WantResponse string            `yaml:"wantResponse"`
 	Vars         map[string]string `yaml:"vars"`
@@ -30,19 +29,17 @@ type UseCase struct {
 type APIUseCase struct {
 	Name         string
 	Method       string
-	BaseURL      string
 	Endpoint     string
 	Body         io.Reader
 	Headers      map[string]string
 	Response     *http.Response
 	Vars         map[string]string
-
 	WantStatus   int
 	WantResponse string
 	Delay        int
 }
 
-func NewAPIUseCase(baseUrl string, env interface{}, usecase *UseCase) (*APIUseCase, error) {
+func NewAPIUseCase(env interface{}, usecase *UseCase) (*APIUseCase, error) {
 	headers := make(map[string]string)
 	for key, header := range usecase.Headers {
 		headers[key] = templateValueReplace(header, env)
@@ -56,16 +53,15 @@ func NewAPIUseCase(baseUrl string, env interface{}, usecase *UseCase) (*APIUseCa
 	body := strings.NewReader(bodyValued)
 
 	return &APIUseCase{
-		Name: name,
-		Method: usecase.Method,
-		BaseURL: baseUrl,
-		Endpoint: endpoint,
-		Body: body,
-		Headers: headers,
-		Vars: usecase.Vars,
-		WantStatus: usecase.WantStatus,
+		Name:         name,
+		Method:       usecase.Method,
+		Endpoint:     endpoint,
+		Body:         body,
+		Headers:      headers,
+		Vars:         usecase.Vars,
+		WantStatus:   usecase.WantStatus,
 		WantResponse: usecase.WantResponse,
-		Delay: usecase.Delay,
+		Delay:        usecase.Delay,
 	}, nil
 }
 
@@ -119,12 +115,12 @@ func (c *APIUseCase) Prefix() string {
 	return prefix
 }
 
-func (c *APIUseCase) request() (error) {
+func (c *APIUseCase) request() error {
 	if c.Delay > 0 {
 		time.Sleep(time.Duration(c.Delay) * time.Second)
 	}
 
-	request, err := http.NewRequest(c.Method, c.BaseURL + c.Endpoint, c.Body)
+	request, err := http.NewRequest(c.Method, c.Endpoint, c.Body)
 	if err != nil {
 		return err
 	}
@@ -247,7 +243,7 @@ func extractSubstringBetween(input, startSubstring, endSubstring string) (string
 		return "", ""
 	}
 
-	resultSubstring := input[startIndex+len(startSubstring):endIndex]
+	resultSubstring := input[startIndex+len(startSubstring) : endIndex]
 	remaingSubstring := input[0:startIndex]
 	return resultSubstring, remaingSubstring
 }

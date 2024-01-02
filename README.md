@@ -3,16 +3,15 @@ Http client to make testing apis, or just making normal curl requests a bit easi
 
 ## Config
 ```yaml
-env:
+vars:
   url: http://localhost:8080/api/v1
-  vars:
-    token: test
-    id: 123213
+  token: test
+  id: 123213
 
 requests:
   - name: "new token"
     method: "POST"
-    endpoint: "/login"
+    endpoint: "{{ .url }}/login"
     headers:
       "Content-type": "application/json"
     body: >
@@ -27,7 +26,7 @@ requests:
       token: "access_token"
   - name: "get users"
     method: "GET"
-    endpoint: "/users"
+    endpoint: "{{ .url }}/users"
     headers:
       "Content-type": "application/json"
       "Authorization": "Bearer {{ .token }}"
@@ -51,7 +50,7 @@ env:
 requests:
   - name: "new token"
     method: "POST"
-    endpoint: "/login"
+    endpoint: "{{ .url }}/login"
     headers:
       "Content-type": "application/json"
     body: >
@@ -77,7 +76,7 @@ env:
 requests:
   - name: "get users"
     method: "GET"
-    endpoint: "/users"
+    endpoint: "{{ .url }}/users"
     headers:
       "Content-type": "application/json"
       "Authorization": "Bearer {{ .token }}"

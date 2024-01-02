@@ -1,13 +1,12 @@
-env:
+vars:
   url: http://localhost:8080/api/v1
-  vars:
-    token: test
-    id: 123213
+  token: test
+  id: 123213
 
 requests:
   - name: "new token"
     method: "POST"
-    endpoint: "/login"
+    endpoint: "{{ .url }}/login"
     headers:
       "Content-type": "application/json"
     body: >
@@ -21,7 +20,7 @@ requests:
       token: "access_token"
   - name: "get users"
     method: "GET"
-    endpoint: "/users"
+    endpoint: "{{ .url }}/users"
     headers:
       "Content-type": "application/json"
       "Authorization": "Bearer {{ .token }}"
@@ -31,7 +30,7 @@ requests:
       id: "data[1],id"
   - name: "get user"
     method: "GET"
-    endpoint: "/users/{{ .id }}"
+    endpoint: "{{ .url }}/users/{{ .id }}"
     headers:
       "Authorization": "Bearer {{ .token }}"
       "Content-type": "application/json"
@@ -39,7 +38,7 @@ requests:
     wantResponse: "{success}"
   - name: "insert user"
     method: "POST"
-    endpoint: "/users"
+    endpoint: "{{ .url }}/users"
     headers:
       "Authorization": "Bearer {{ .token }}"
       "Content-type": "application/x-www-form-urlencoded"

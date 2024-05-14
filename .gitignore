@@ -21,6 +21,7 @@
 go.work
 
 # Project specifics
-cmd/build
+cmd/build/*
+!cmd/build/.gitkeep
 .courier
 courier.yaml

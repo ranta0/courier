@@ -1,3 +1,12 @@
+/*
+Package courier usecase is a simple http request, with a very simplistic
+testing method:
+- what status to expect (integer)
+- a string contained in the output, encased between `{` and `}`
+
+Vars contains the variables we want to store from the response itself, handy
+when you need to chain requests one after the other.
+*/
 package courier
 
 import (

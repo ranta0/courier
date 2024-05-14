@@ -1,3 +1,4 @@
+// Package courier colors is a set of default term colours
 package courier
 
 import "fmt"

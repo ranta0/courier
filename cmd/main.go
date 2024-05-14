@@ -19,6 +19,7 @@ type Config struct {
 }
 
 var (
+	version                     = "0.0.3"
 	defaultConfigFileName       = "courier"
 	defaultConfigFileNameFolder = "config"
 	defaultConfigFolderName     = ".courier/"
@@ -130,20 +131,33 @@ func prettyJSON(jsonString string) (string, error) {
 }
 
 func main() {
+	var showVersion bool
 	var editor string
 	var openResponseEditor bool
-	var prettierJson bool
+	var prettierJSON bool
 	var configFile string
 	var editFile bool
 	var test bool
 
-	flag.StringVar(&editor, "e", "", "pick the editor, by default it uses the enviroment $EDITOR")
-	flag.BoolVar(&openResponseEditor, "o", false, "open each response inside the editor of preference")
-	flag.BoolVar(&prettierJson, "json", false, "prettier json response")
-	flag.StringVar(&configFile, "f", "", "request file, defaults to courier.yaml or .courier/config.yaml")
+	flag.StringVar(&editor, "editor", "", "pick the editor, by default it uses the enviroment $EDITOR")
+	flag.BoolVar(&openResponseEditor, "open", false, "open each response inside the editor of preference")
+	flag.BoolVar(&prettierJSON, "json", false, "prettier json response")
+	flag.StringVar(&configFile, "config-file", "", "request file, defaults to courier.yaml or .courier/config.yaml")
 	flag.BoolVar(&editFile, "edit", false, "uses editor to edit config file")
-	flag.BoolVar(&test, "t", false, "show testing response")
+	flag.BoolVar(&test, "test", false, "show testing response")
+	flag.BoolVar(&showVersion, "v", false, "print version")
+	flag.Usage = func() {
+		fmt.Printf("%s - simple http client\n\nVersion: %s (%s)\n\nOptions:\n",
+			defaultConfigFileName, version, runtime.Version())
+		flag.PrintDefaults()
+	}
 	flag.Parse()
+
+	if showVersion {
+		fmt.Printf("%s - simple http client\n\nVersion: %s (%s)\n\n",
+			defaultConfigFileName, version, runtime.Version())
+		os.Exit(0)
+	}
 
 	configFileClean, err := getConfigFile(configFile)
 	if err != nil {
@@ -192,7 +206,7 @@ func main() {
 		}
 
 		extension := ""
-		if prettierJson {
+		if prettierJSON {
 			responseOutput, err = prettyJSON(responseOutput)
 			if err != nil {
 				fmt.Printf("%s: %s %s\n", courier.Red("Error"), courier.Blue(usecase.Prefix()), err)

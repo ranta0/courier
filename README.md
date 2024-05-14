@@ -6,7 +6,7 @@ Http client to make testing apis, or just making normal curl requests a bit easi
 vars:
   url: http://localhost:8080/api/v1
   token: test
-  id: 123213
+  id: 123456
 
 requests:
   - name: "new token"
@@ -110,29 +110,29 @@ This would mean the variable *id* from its original value of **123213** is now *
 ```
 make build
 ```
-Bin is located in ```./cmd/build/courier```
+Bin is located in ```cmd/build```
 
 ## Usage
 
 ```
-courier -f myconfig.yaml
+courier -config-file myconfig.yaml
 courier # defaults to using courier.yaml or .courier/config.yaml in your current pwd
 ```
 
 The output can be piped with ```jq```
 ```
-courier -f myconfig.yaml | jq
+courier -config-file myconfig.yaml | jq
 courier | jq
 ```
 
-The flag ```-o``` to open each response inside the editor of preference, uses the enviroment $EDITOR value.
+The flag ```-open``` to open each response inside the editor of preference, uses the enviroment $EDITOR value.
 ```
-courier -o
-courier -o -json # json flag to have it prettier
-courier -o -e nano # e flag to change the editor at need
+courier -open
+courier -open -json # json flag to have it prettier
+courier -open -editor nano # e flag to change the editor at need
 ```
 
-The flag ```-t``` runs a test on all requests checking if the response status code matches with ```wantStatus``` and if the response contains ```wantResponse``` string.
+The flag ```-test``` runs a test on all requests checking if the response status code matches with ```wantStatus``` and if the response contains ```wantResponse``` string.
 ```
-courier -t
+courier -test
 ```

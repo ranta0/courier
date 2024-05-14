@@ -18,6 +18,7 @@ requests:
     wantResponse: "{access_token}"
     vars:
       token: "access_token"
+
   - name: "get users"
     method: "GET"
     endpoint: "{{ .url }}/users"
@@ -28,6 +29,7 @@ requests:
     wantResponse: "{success}"
     vars:
       id: "data[1],id"
+
   - name: "get user"
     method: "GET"
     endpoint: "{{ .url }}/users/{{ .id }}"
@@ -36,6 +38,7 @@ requests:
       "Content-type": "application/json"
     wantStatus: 200
     wantResponse: "{success}"
+
   - name: "insert user"
     method: "POST"
     endpoint: "{{ .url }}/users"

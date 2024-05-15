@@ -19,7 +19,7 @@ type Config struct {
 }
 
 var (
-	version                     = "0.0.3"
+	version                     = "0.2.1"
 	defaultConfigFileName       = "courier"
 	defaultConfigFileNameFolder = "config"
 	defaultConfigFolderName     = ".courier/"

@@ -35,11 +35,11 @@ compress:
 .PHONY: lint
 lint: $(GOBIN)/staticcheck
 	@go vet ./...
-	@staticcheck -checks all ./...
+	@$(GOBIN)/staticcheck -checks all ./...
 
 .PHONY: version
 version: $(GOBIN)/gobump
-	 @gobump show -r "$(VERSION_PATH)"
+	 @$(GOBIN)/gobump show -r "$(VERSION_PATH)"
 
 .PHONY: cross
 cross:

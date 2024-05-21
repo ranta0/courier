@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -48,30 +47,51 @@ type APIUseCase struct {
 	Delay        int
 }
 
+var templateReplaceErrorMessageFormat = "failed replacing value for the %s => `%s`, the variable is invalid"
+
 func NewAPIUseCase(env interface{}, usecase *UseCase) (*APIUseCase, error) {
-	headers := make(map[string]string)
-	for key, header := range usecase.Headers {
-		headers[key] = templateValueReplace(header, env)
-	}
-
-	name := templateValueReplace(usecase.Name, env)
-
-	endpoint := templateValueReplace(usecase.Endpoint, env)
-
-	bodyValued := templateValueReplace(usecase.Body, env)
-	body := strings.NewReader(bodyValued)
-
-	return &APIUseCase{
-		Name:         name,
+	// everything but the the body
+	apiUseCase := &APIUseCase{
+		Name:         usecase.Name,
 		Method:       usecase.Method,
-		Endpoint:     endpoint,
-		Body:         body,
-		Headers:      headers,
+		Endpoint:     usecase.Endpoint,
+		Headers:      usecase.Headers,
 		Vars:         usecase.Vars,
 		WantStatus:   usecase.WantStatus,
 		WantResponse: usecase.WantResponse,
 		Delay:        usecase.Delay,
-	}, nil
+	}
+
+	headers := make(map[string]string)
+	for key, header := range usecase.Headers {
+		replacedValue, err := templateValueReplace(header, env)
+		headers[key] = replacedValue
+		if err != nil {
+			return apiUseCase, fmt.Errorf(templateReplaceErrorMessageFormat, "header", header)
+		}
+	}
+	apiUseCase.Headers = headers
+
+	name, err := templateValueReplace(apiUseCase.Name, env)
+	if err != nil {
+		return apiUseCase, fmt.Errorf(templateReplaceErrorMessageFormat, "name", apiUseCase.Name)
+	}
+	apiUseCase.Name = name
+
+	endpoint, err := templateValueReplace(apiUseCase.Endpoint, env)
+	if err != nil {
+		return apiUseCase, fmt.Errorf(templateReplaceErrorMessageFormat, "endpoint", apiUseCase.Endpoint)
+	}
+	apiUseCase.Endpoint = endpoint
+
+	bodyValued, err := templateValueReplace(usecase.Body, env)
+	if err != nil {
+		return apiUseCase, fmt.Errorf(templateReplaceErrorMessageFormat, "body", usecase.Body)
+	}
+	body := strings.NewReader(bodyValued)
+	apiUseCase.Body = body
+
+	return apiUseCase, nil
 }
 
 func (c *APIUseCase) Curl(env interface{}) (string, error) {
@@ -162,6 +182,7 @@ func (c *APIUseCase) responseToString(env interface{}) (string, error) {
 
 	var output interface{}
 
+	// check response type
 	if err := json.Unmarshal([]byte(bodyStr), &output); err != nil {
 		return bodyStr, err
 	}
@@ -176,7 +197,7 @@ func (c *APIUseCase) responseToString(env interface{}) (string, error) {
 
 func (c *APIUseCase) seekAndSetEnv(output, env interface{}) error {
 	for key, value := range c.Vars {
-		varKeys := strings.Split(value, ",")
+		varKeys := strings.Split(value, ".")
 
 		var newEnvValue interface{}
 		outputDepth := output
@@ -209,9 +230,9 @@ func (c *APIUseCase) seekAndSetEnv(output, env interface{}) error {
 				newEnvValue = v.Index(newIndex).Interface()
 				outputDepth = v.Index(newIndex).Interface()
 			} else {
-				keyValue, err := getValueForKey(outputDepth, node)
+				keyValue, err := getValueForKey(outputDepth, remaingSubstring)
 				if err != nil {
-					return fmt.Errorf("response does not contain %s", node)
+					return fmt.Errorf("response does not contain %s", remaingSubstring)
 				}
 
 				outputDepth = keyValue
@@ -229,19 +250,19 @@ func (c *APIUseCase) seekAndSetEnv(output, env interface{}) error {
 	return nil
 }
 
-func templateValueReplace(str string, env interface{}) string {
+func templateValueReplace(str string, env interface{}) (string, error) {
 	t, err := template.New("str").Parse(str)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 	var buff bytes.Buffer
 
 	err = t.Execute(&buff, env)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
-	return buff.String()
+	return buff.String(), nil
 }
 
 func extractSubstringBetween(input, startSubstring, endSubstring string) (string, string) {
@@ -249,7 +270,7 @@ func extractSubstringBetween(input, startSubstring, endSubstring string) (string
 	endIndex := strings.Index(input, endSubstring)
 
 	if startIndex == -1 || endIndex == -1 || startIndex >= endIndex {
-		return "", ""
+		return "", input
 	}
 
 	resultSubstring := input[startIndex+len(startSubstring) : endIndex]

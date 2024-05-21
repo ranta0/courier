@@ -14,7 +14,6 @@ import (
 
 type Config struct {
 	Vars     interface{}       `yaml:"vars"`
-	Auth     courier.UseCase   `yaml:"auth"`
 	Requests []courier.UseCase `yaml:"requests"`
 }
 

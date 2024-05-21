@@ -1,7 +1,10 @@
 # courier
-Http client to make testing apis, or just making normal curl requests a bit easier for me
+
+Http client to make testing apis, or just making normal curl requests, a bit
+easier for me. Automation and whatnot.
 
 ## Config
+
 ```yaml
 vars:
   url: http://localhost:8080/api/v1
@@ -33,14 +36,18 @@ requests:
     wantStatus: 200
     wantResponse: "{success}"
     vars:
-      id: "data[0],id"
+      id: "data[0].id"
 ```
-The key ```delay``` delays the current request by X seconds, X must be an integer.
 
-Vars can be used as contasts defined at the head of the config or assigned at run time with the data of the requests.
-These vars can be used in the ```endpoint```, ```headers```, ```body``` and ```name``` with the ```{{ .variable }}``` notation.
+The key `delay` delays the current request by X seconds, X must be an integer.
 
-The key ```vars``` inside the definition of the request will search for that key inside the response and assign it to the variable.
+Variables are defined in the `vars` key, they can be used as they are or reassigned.
+These variables can be used in the `endpoint`, `headers`, `body` and `name`
+with the `{{ .var_name }}` notation.
+
+The key `vars` inside the definition of the `request` will search for that key
+inside the response and assign it to that variable if found.
+
 ```yaml
 env:
   ###
@@ -63,10 +70,21 @@ requests:
     vars:
       token: "access_token" # <-- assign value to the variable token
 ```
-The definition of token inside vars will search for a key ```"access_token"``` inside the response and assign the variable ```token``` its value.
-If the variable is never defined inside a request ```vars``` key, it will retain its default value.
 
-More nested is the data more keys divided by comma will translate in that deeper depth as well (it is always left first).
+For instance, this will attempt to set token to a key `access_token` taken from
+the request reponse output.
+
+```yaml
+vars:
+  token: "access_token"
+```
+
+If the variable is never defined inside a request `vars` key, it will retain
+its default value.
+
+To access nested values inside a response we use a `dot` notation. Treating the
+output as an object. The more the dots, the deeper the depth inside the object
+
 ```yaml
 env:
   ###
@@ -83,11 +101,12 @@ requests:
     wantStatus: 200
     wantResponse: "{success}"
     vars:
-      id: "data[0],id" # <-- assign value
+      id: "data[0].id" # <-- assign value
 ```
 
-In this scenario we want to assign a value dynamically to the ```id``` variable from the ```/users``` endpoint response.
-This is the ```/users``` output:
+In this scenario we want to assign a value dynamically to the `id` variable from the `/users` endpoint response.
+Given this as the `/users` output:
+
 ```json
 {
   "data": [
@@ -102,15 +121,20 @@ This is the ```/users``` output:
   "status": "success"
 }
 ```
-```data``` is the first key which happens to be an array, so we need to define which **i-th** of it as well like any normal array. ```id``` is the key of said array.
 
-This would mean the variable *id* from its original value of **123213** is now **63995ba6-1d89-XXXX-9703-880a9cbdb986**.
+`data` is the first key which happens to be an array, so we need to define
+which **i-th** of it as well like any normal array. `id` is the key of said array.
+
+This would mean the variable _id_ from its original value of **123213** is
+now **63995ba6-1d89-XXXX-9703-880a9cbdb986**.
 
 ## Build
+
 ```
 make build
 ```
-Bin is located in ```cmd/build```
+
+Bin is located in `cmd/build`
 
 ## Usage
 
@@ -119,20 +143,23 @@ courier -config-file myconfig.yaml
 courier # defaults to using courier.yaml or .courier/config.yaml in your current pwd
 ```
 
-The output can be piped with ```jq```
+The output can be piped with `jq`
+
 ```
 courier -config-file myconfig.yaml | jq
 courier | jq
 ```
 
-The flag ```-open``` to open each response inside the editor of preference, uses the enviroment $EDITOR value.
+The flag `-open` to open each response inside the editor of preference, uses the enviroment $EDITOR value.
+
 ```
 courier -open
 courier -open -json # json flag to have it prettier
 courier -open -editor nano # e flag to change the editor at need
 ```
 
-The flag ```-test``` runs a test on all requests checking if the response status code matches with ```wantStatus``` and if the response contains ```wantResponse``` string.
+The flag `-test` runs a test on all requests checking if the response status code matches with `wantStatus` and if the response contains `wantResponse` string.
+
 ```
 courier -test
 ```

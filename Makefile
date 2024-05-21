@@ -24,6 +24,10 @@ clean:
 	@rm -rf ${BUILD_DIR}courier*
 	@go clean
 
+.PHONY: test
+test:
+	go test -v -race ./...
+
 .PHONY: compress
 compress:
 	@if [ "$$(which upx)" != "" ]; then \

@@ -28,7 +28,7 @@ requests:
     wantStatus: 200
     wantResponse: "{success}"
     vars:
-      id: "data[1],id"
+      id: "data[1].id"
 
   - name: "get user"
     method: "GET"
